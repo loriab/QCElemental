@@ -817,8 +817,9 @@ class Molecule(ProtoModel):
             else:
                 raise TypeError("Input type not understood, please supply the 'dtype' kwarg.")
 
-        if dtype in ["string", "psi4", "xyz", "xyz+"]:
-            mol_dict = from_string(data, dtype if dtype != "string" else None)
+        if dtype in ["string", "psi4", "psi4+", "xyz", "xyz+"]:
+            mol_dict = from_string(data, dtype if dtype != "string" else None,
+                                   enable_qm=True, missing_enabled_return_qm='minimal')
             assert isinstance(mol_dict, dict)
             input_dict = to_schema(mol_dict["qm"], dtype=2, np_out=True)
             input_dict = _filter_defaults(input_dict)
