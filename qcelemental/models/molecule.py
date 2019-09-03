@@ -283,7 +283,7 @@ class Molecule(ProtoModel):
 
             nonphysical = kwargs.pop("nonphysical", False)
             schema = to_schema(
-                from_schema(kwargs, nonphysical=nonphysical), dtype=kwargs["schema_version"], copy=False, np_out=True
+                from_schema(kwargs, nonphysical=nonphysical, missing_enabled_return="minimal"), dtype=kwargs["schema_version"], copy=False, np_out=True
             )
             schema = _filter_defaults(schema)
 

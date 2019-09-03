@@ -7,7 +7,7 @@ from ..util import provenance_stamp
 from .from_arrays import from_arrays
 
 
-def from_schema(molschema, *, nonphysical: bool = False, verbose: int = 1) -> Dict:
+def from_schema(molschema, *, nonphysical: bool = False, missing_enabled_return: str = "error", verbose: int = 1) -> Dict:
     """Construct molecule dictionary representation from non-Psi4 schema.
 
     Parameters
@@ -80,7 +80,7 @@ def from_schema(molschema, *, nonphysical: bool = False, verbose: int = 1) -> Di
         provenance=ms.get("provenance", None),
         connectivity=ms.get("connectivity", None),
         domain="qm",
-        # missing_enabled_return=missing_enabled_return,
+        missing_enabled_return=missing_enabled_return,
         speclabel=False,
         # tooclose=tooclose,
         # zero_ghost_fragments=zero_ghost_fragments,
