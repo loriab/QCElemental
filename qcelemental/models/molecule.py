@@ -17,7 +17,7 @@ from ..physical_constants import constants
 from ..testing import compare, compare_values
 from ..util import deserialize, measure_coordinates, provenance_stamp, which_import, msgpackext_loads
 from .basemodels import ProtoModel
-from .common_models import Provenance, qcschema_molecule_default
+from .common_models import Provenance, qcschema_molecule_default, qcschema_efp_molecule_default
 from .types import Array
 
 # Rounding quantities for hashing
@@ -73,7 +73,7 @@ class Identifiers(ProtoModel):
         serialize_skip_defaults = True
 
 
-class Molecule(ProtoModel):
+class ProtoMolecule(ProtoModel):
     """
     A QCSchema representation of a Molecule. This model contains
     data for symbols, geometry, connectivity, charges, fragmentation, etc while also supporting a wide array of I/O and manipulation capabilities.
@@ -1225,3 +1225,142 @@ class Molecule(ProtoModel):
 
 
 # auto_gen_docs_on_demand(Molecule)
+
+
+class EFPMolecule(ProtoMolecule):
+    """
+    A QCSchema representation of an EFP Molecule. This model contains
+    data for EFP fragment library names and geometry hints as well as the usual symbols, geometry, connectivity, charges, fragmentation, etc for visualization.
+
+    """
+
+    schema_name: constr(strip_whitespace=True, regex=qcschema_efp_molecule_default) = Schema(  # type: ignore
+        qcschema_efp_molecule_default,
+        description=(f"The QCSchema specification this model conforms to. Explicitly fixed as "
+                     f"{qcschema_efp_molecule_default}."))
+    schema_version: int = Schema(  # type: ignore
+        1, description="The version number of ``schema_name`` that this Molecule model conforms to.")
+#    validated: bool = Schema(  # type: ignore
+#        False,
+#        description="A boolean indicator (for speed purposes) that the input Molecule data has been previously checked "
+#        "for schema (data layout and type) and physics (e.g., non-overlapping atoms, feasible "
+#        "multiplicity) compliance. This should be False in most cases. A ``True`` setting "
+#        "should only ever be set by the constructor for this class itself or other trusted sources such as "
+#        "a Fractal Server or previously serialized Molecules.")
+
+    # Required data
+    fragment_files: List[str] = Schema(
+        ...,
+        description="An ordered (nfr, ) list of lowercased names of efp meat fragment files.")
+    hint_types: List[str] = Schema(
+        ...,
+        description="An ordered (nfr, ) list of type of fragment orientation hint: {'xyzabc', 'points'}.")
+    geom_hints: List[List[float]] = Schema(
+        ...,
+        description="An ordered (nfr, ) list where inner lists have length 6 (xyzabc; to orient the center) or"
+        "9 (points; to orient the first three atoms) of the EFP fragment.")
+
+
+    def __init__(self, validate: Optional[bool] = None, **kwargs: Any) -> None:
+        """Initializes the EFP molecule object from dictionary-like values.
+
+        Parameters
+        ----------
+#        orient : bool, optional
+#            If True, orientates the Molecule to a common reference frame.
+        validate : Optional[bool], optional
+#            If ``None`` validation is always applied unless the ``validated`` flag is set. Otherwise uses the boolean to decide to validate the Molecule or not.
+        **kwargs : Any
+            The values of the EFP Molecule object attributes.
+        """
+#        if validate is None:
+#            validate = not kwargs.get("validated", False)
+
+        if validate:
+            kwargs["schema_name"] = kwargs.pop("schema_name", "qcschema_efp_molecule")
+            kwargs["schema_version"] = kwargs.pop("schema_version", 1)
+#            # original_keys = set(kwargs.keys())  # revive when ready to revisit sparsity
+#
+#            schema = to_schema(from_schema(kwargs, missing_enabled_return='minimal'),
+#                               dtype=kwargs["schema_version"],
+#                               copy=False,
+#                               np_out=True)
+#
+#            kwargs["validated"] = True
+#            kwargs = {**kwargs, **schema}  # Allow any extra fields
+#            validate = True
+
+        super().__init__(**kwargs)
+
+#        # We are pulling out the values *explicitly* so that the pydantic skip_defaults works as expected
+#        # All attributes set bellow are equivalent to the default set.
+#        values = self.__dict__
+#
+#        natoms = values["geometry"].shape[0]
+#        if validate:
+#            values["symbols"] = np.core.defchararray.title(self.symbols)  # Title case for consistency
+#
+#        if values["masses"] is None:  # Setup masses before fixing the orientation
+#            values["masses"] = np.array([periodictable.to_mass(x) for x in values["symbols"]])
+#
+#        if values["real"] is None:
+#            values["real"] = np.ones(natoms, dtype=bool)
+#
+#        if orient:
+#            values["geometry"] = float_prep(self._orient_molecule_internal(), GEOMETRY_NOISE)
+#        elif validate:
+#            values["geometry"] = float_prep(values["geometry"], GEOMETRY_NOISE)
+#
+#        # Cleanup un-initialized variables  (more complex than Pydantic Validators allow)
+#        if values["fragments"] is None:
+#            values["fragments"] = [np.arange(natoms, dtype=np.int32)]
+#            values["fragment_charges"] = [values["molecular_charge"]]
+#            values["fragment_multiplicities"] = [values["molecular_multiplicity"]]
+#        else:
+#            if values["fragment_charges"] is None:
+#                if np.isclose(values["molecular_charge"], 0.0):
+#                    values["fragment_charges"] = [0 for _ in values["fragments"]]
+#                else:
+#                    raise KeyError("Fragments passed in, but not fragment charges for a charged molecule.")
+#
+#            if values["fragment_multiplicities"] is None:
+#                if values["molecular_multiplicity"] == 1:
+#                    values["fragment_multiplicities"] = [1 for _ in values["fragments"]]
+#                else:
+#                    raise KeyError("Fragments passed in, but not fragment multiplicities for a non-singlet molecule.")
+
+#    @validator('geometry')
+#    def _must_be_3n(cls, v, values, **kwargs):
+#        n = len(values['symbols'])
+#        try:
+#            v = v.reshape(n, 3)
+#        except (ValueError, AttributeError):
+#            raise ValueError("Geometry must be castable to shape (N,3)!")
+#        return v
+
+    @validator('fragment_files', 'hint_types', whole=True)
+    def _must_be_nfr(cls, v, values, **kwargs):
+        if 'geometry_hints' in values:
+            nfr = len(values['geometry_hints'])
+            if len(v) != nfr:
+                raise ValueError("Fragment files and hint types"
+                                 " must be same number of entries as geometry hints")
+        else:
+            raise ValueError("Cannot have fragment_files or hint_types without geometry_hints")
+        return v
+
+
+
+class Molecule(ProtoMolecule):
+
+    efp_molecule: Optional[EFPMolecule] = Schema(  # type: ignore
+        None,
+        description="EFP Molecule.")
+
+
+
+
+
+
+
+
