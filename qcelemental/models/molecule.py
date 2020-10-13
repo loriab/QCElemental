@@ -1392,13 +1392,13 @@ class EFPMolecule(ProtoMolecule):
 
     """
 
-    schema_name: constr(strip_whitespace=True, regex=qcschema_efp_molecule_default) = Schema(  # type: ignore
+    schema_name: constr(strip_whitespace=True, regex=qcschema_efp_molecule_default) = Field(  # type: ignore
         qcschema_efp_molecule_default,
         description=(f"The QCSchema specification this model conforms to. Explicitly fixed as "
                      f"{qcschema_efp_molecule_default}."))
-    schema_version: int = Schema(  # type: ignore
+    schema_version: int = Field(  # type: ignore
         1, description="The version number of ``schema_name`` that this Molecule model conforms to.")
-#    validated: bool = Schema(  # type: ignore
+#    validated: bool = Field(  # type: ignore
 #        False,
 #        description="A boolean indicator (for speed purposes) that the input Molecule data has been previously checked "
 #        "for schema (data layout and type) and physics (e.g., non-overlapping atoms, feasible "
@@ -1407,13 +1407,13 @@ class EFPMolecule(ProtoMolecule):
 #        "a Fractal Server or previously serialized Molecules.")
 
     # Required data
-    fragment_files: List[str] = Schema(
+    fragment_files: List[str] = Field(
         ...,
         description="An ordered (nfr, ) list of lowercased names of efp meat fragment files.")
-    hint_types: List[str] = Schema(
+    hint_types: List[str] = Field(
         ...,
         description="An ordered (nfr, ) list of type of fragment orientation hint: {'xyzabc', 'points'}.")
-    geom_hints: List[List[float]] = Schema(
+    geom_hints: List[List[float]] = Field(
         ...,
         description="An ordered (nfr, ) list where inner lists have length 6 (xyzabc; to orient the center) or"
         "9 (points; to orient the first three atoms) of the EFP fragment.")
@@ -1511,7 +1511,7 @@ class EFPMolecule(ProtoMolecule):
 
 class Molecule(ProtoMolecule):
 
-    efp_molecule: Optional[EFPMolecule] = Schema(  # type: ignore
+    efp_molecule: Optional[EFPMolecule] = Field(  # type: ignore
         None,
         description="EFP Molecule.")
 
