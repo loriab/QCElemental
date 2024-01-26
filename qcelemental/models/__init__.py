@@ -19,7 +19,7 @@ from .results import Result  # scheduled for removal
 from .results import ResultInput  # scheduled for removal
 from .results import ResultProperties  # scheduled for removal
 from .results import AtomicInput, AtomicResult, AtomicResultProperties
-from .procedures_layered import BsseEnum, ManyBodyKeywords, ManyBodyInput, ManyBodyResult, ManyBodyResultProperties
+from .procedures_layered import BsseEnum, ManyBodyKeywords, ManyBodySpecification, ManyBodyInput, ManyBodyResult, ManyBodyResultProperties
 
 
 def qcschema_models():
